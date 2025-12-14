@@ -2,7 +2,7 @@
 STEP 5B: Generate Detailed Event Reports
 Creates individual detailed reports for high-priority and safe events
 
-Author: Ahmed Talal Alharbi (Team Leader)  
+Author: Ahmed Alharbi (Team Leader)  
 Date: November 2025
 DebriSolver Competition - KAU Team
 """
