@@ -2,7 +2,7 @@
 STEP 3: Train Self-Supervised GRU Model
 Model learns to predict next CDM parameters from historical sequence
 
-Author: Ahmed Talal Alharbi (Team Leader)  
+Author: Ahmed Alharbi (Team Leader)  
 Date: November 2025
 DebriSolver Competition - KAU Team
 
