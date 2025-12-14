@@ -2,7 +2,7 @@
 Visualize BiGRU Model Architecture
 Creates publication-ready diagram for methodology section
 
-Author: Ahmed Talal Alharbi (Team Leader)  
+Author: Ahmed Alharbi (Team Leader)  
 Date: December 2025
 DebriSolver Competition - KAU Team
 """
