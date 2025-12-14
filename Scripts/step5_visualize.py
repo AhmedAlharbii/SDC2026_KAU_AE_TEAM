@@ -2,7 +2,7 @@
 STEP 5: Visualization Dashboard - REVISED
 Creates individual, publication-ready figures for research report
 
-Author: Ahmed Talal Alharbi (Team Leader)  
+Author: Ahmed Alharbi (Team Leader)  
 Date: December 2025
 DebriSolver Competition - KAU Team
 
