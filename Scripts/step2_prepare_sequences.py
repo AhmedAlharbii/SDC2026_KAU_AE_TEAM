@@ -2,7 +2,7 @@
 STEP 2: Prepare Sequences for Self-Supervised Learning
 Groups CDMs by event, creates sequences, temporal train/test split
 
-Author: Ahmed Talal Alharbi (Team Leader)  
+Author: Ahmed Alharbi (Team Leader)  
 Date: November 2025
 DebriSolver Competition - KAU Team
 
