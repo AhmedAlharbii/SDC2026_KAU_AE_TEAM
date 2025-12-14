@@ -2,7 +2,7 @@
 STEP 4: Inference & Dashboard Generation
 Converts self-supervised model predictions into operator-actionable threat assessments
 
-Author: Ahmed Talal Alharbi (Team Leader)  
+Author: Ahmed Alharbi (Team Leader)  
 Date: November 2025
 DebriSolver Competition - KAU Team
 
