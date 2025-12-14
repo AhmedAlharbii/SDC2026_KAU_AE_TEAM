@@ -2,7 +2,7 @@
 STEP 1: KVN Parser for Self-Supervised CDM Learning
 Extracts all parameters from KVN files for trajectory learning
 
-Author: Ahmed Talal Alharbi (Team Leader)  
+Author: Ahmed Alharbi (Team Leader)  
 Date: November 2025
 DebriSolver Competition - KAU Team
 """
