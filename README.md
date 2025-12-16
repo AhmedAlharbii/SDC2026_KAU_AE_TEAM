@@ -118,9 +118,9 @@ SDC2026_KAU_AE_TEAM/
 │        ├── Figure_6_Threat_Correlation.png
 │        ├── Figure_7_Quadrant_Dashboard.png
 │        ├── Figure_8_Confidence_Calibration.png
-│        ├── Figure_8a_Overall_MAE_Evolution.png XX
-│        └── Figure_8b_Pc_MAE_Evolution.png      XX
-│
+│        ├── Model_Architecture_BiGRU.png
+│        └── Table_1_High_Priority_Events.png
+|
 ├── README.md                    # This file
 ├── LICENSE                      # MIT License
 └── requirements.txt             # Python dependencies
