@@ -138,7 +138,7 @@ SDC2026_KAU_AE_TEAM/
 ### Setup
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/SDC2026_KAU_AE_TEAM.git
+git clone https://github.com/AhmedAlharbii/SDC2026_KAU_AE_TEAM.git
 cd SDC2026_KAU_AE_TEAM
 
 # Create virtual environment (recommended)
@@ -482,7 +482,7 @@ It helps others discover this research and supports our work.
 
 ---
 
-**Last Updated**: December 2024  
+**Last Updated**: December 2025  
 **Status**: Competition Submission Complete ✅  
 **Code Status**: Fully Reproducible ✅
 
