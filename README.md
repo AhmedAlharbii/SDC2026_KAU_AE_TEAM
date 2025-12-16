@@ -184,51 +184,6 @@ python Scripts/step4_evaluate_model.py --model trained_model/best_model.h5 --dat
 python Scripts/step5_generate_reports.py --model trained_model/best_model.h5 --output results/
 ```
 
-### Training Your Own Model
-```python
-from Scripts.step3_train_model import train_model
-
-# Train with custom parameters
-history = train_model(
-    data_path='data/sequences/',
-    epochs=150,
-    batch_size=64,
-    learning_rate=0.001,
-    early_stopping_patience=20,
-    output_dir='trained_model/'
-)
-```
-I think we should delete this:
-
-### Using Pre-trained Model
-```python
-import tensorflow as tf
-import numpy as np
-
-# Load model
-model = tf.keras.models.load_model('trained_model/best_model.h5')
-
-# Make prediction with uncertainty
-def predict_with_uncertainty(model, input_sequence, n_samples=50):
-    predictions = []
-    for _ in range(n_samples):
-        pred = model(input_sequence, training=True)  # MC Dropout
-        predictions.append(pred)
-    
-    predictions = np.array(predictions)
-    mean_pred = predictions.mean(axis=0)
-    uncertainty = predictions.std(axis=0)
-    
-    return mean_pred, uncertainty
-
-# Example usage
-mean, uncertainty = predict_with_uncertainty(model, X_test[:1])
-print(f"Predicted Pc: {mean[0][0]:.2e}")
-print(f"Uncertainty: {uncertainty[0][0]:.2e}")
-```
-
----
-
 ## 📦 Dataset
 
 ### DebriSolver Space Data Challenge Dataset
@@ -348,22 +303,6 @@ python Scripts/plot_quadrant_dashboard.py --predictions results/test_predictions
 python Scripts/generate_all_figures.py
 ```
 
-### Performance Metrics
-```python
-from Scripts.step4_evaluate_model import calculate_metrics
-
-# Load predictions
-predictions = pd.read_csv('results/test_predictions.csv')
-
-# Calculate metrics
-metrics = calculate_metrics(predictions)
-print(f"Pc MAE: {metrics['pc_mae']:.3f}")
-print(f"log10(Pc) R²: {metrics['r2_log_pc']:.3f}")
-print(f"Overall MAE: {metrics['overall_mae']:.3f}")
-```
-
----
-
 ## 📝 Citation
 
 If you use this code or model in your research, please cite our paper:
@@ -392,7 +331,7 @@ King Abdulaziz University, Jeddah, Saudi Arabia
 - **Khalid Alsadoon**     - Team Member             | Linkedin: https://www.linkedin.com/in/khalid-alsadoon-a95802242/
 - **Mohamedhakim Hassan** - Team Member             | Linkedin: https://www.linkedin.com/in/mohamed-hassan-aero/
 
-**Competition**: DebriSolver Space Data Challenge 2024  
+**Competition**: DebriSolver Space Data Challenge 2026  
 **Organizer**: Saudi Space Agency
 
 ---
