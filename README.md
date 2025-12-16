@@ -12,18 +12,23 @@ Official implementation of our research paper submitted to the **DebriSolver Spa
 
 ## 📋 Table of Contents
 
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Results](#results)
-- [Repository Structure](#repository-structure)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Dataset](#dataset)
-- [Model Architecture](#model-architecture)
-- [Citation](#citation)
-- [Team](#team)
-- [License](#license)
-- [Contact](#contact)
+- [Overview](#-overview)
+- [Key Features](#-key-features)
+- [Results](#-results)
+- [Repository Structure](#-repository-structure)
+- [Installation](#-installation)
+- [Usage](#-usage)
+- [Dataset](#-dataset)
+- [Model Architecture](#-model-architecture)
+- [Reproducing Results](#-reproducing-results)
+- [Citation](#-citation)
+- [Team](#-team)
+- [License](#-license)
+- [Contributing](#-contributing)
+- [Contact](#-contact)
+- [Acknowledgments](#-acknowledgments)
+- [Related Work](#-related-work)
+- [Future Work](#-future-work)
 
 ---
 
@@ -152,15 +157,31 @@ pip install -r requirements.txt
 
 ### Requirements.txt Contents
 ```txt
+# Core ML/Data Science
 numpy==1.24.3
 pandas==2.0.3
 tensorflow==2.13.0
 scikit-learn==1.3.0
+
+# Visualization
 matplotlib==3.7.2
 seaborn==0.12.2
+
+# Scientific Computing
 scipy==1.11.1
+
+# Utilities
 tqdm==4.65.0
 python-dateutil==2.8.2
+
+# Additional dependencies for your scripts
+openpyxl==3.1.2          # For Excel file handling (if you save .xlsx)
+Pillow==10.0.0           # For image processing in visualizations
+h5py==3.9.0              # For saving Keras models (.h5 format)
+
+# Optional but recommended
+jupyterlab==4.0.5        # For Jupyter notebooks (if you use them)
+ipykernel==6.25.0        # Jupyter kernel
 ```
 
 ---
