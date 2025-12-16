@@ -107,7 +107,8 @@ SDC2026_KAU_AE_TEAM/
 │   ├── step5b_detailed_reports.py    # Event trajectory reports
 |   ├── train_val_test_graph.py
 |   ├── visualize_model_architecture.py
-|   ├── calculate_R2.py  
+|   ├── calculate_R2.py
+|   ├── requirements.txt
 │   └── figures/                      # All paper figures
 │        ├── Figure_1_Architecture.png
 │        ├── Figure_2_Training_Loss.png
