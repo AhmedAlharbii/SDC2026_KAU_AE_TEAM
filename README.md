@@ -20,7 +20,6 @@ Official implementation of our research paper submitted to the **DebriSolver Spa
 - [Usage](#-usage)
 - [Dataset](#-dataset)
 - [Model Architecture](#-model-architecture)
-- [Reproducing Results](#-reproducing-results)
 - [Citation](#-citation)
 - [Team](#-team)
 - [License](#-license)
@@ -305,25 +304,7 @@ Output: Predicted next CDM (11 features)
 
 ---
 
-## 📈 Reproducing Results
 
-### Generate All Figures
-```bash
-# Architecture diagram
-python Scripts/visualize_architecture.py
-
-# Training curves
-python Scripts/plot_training_curves.py --history trained_model/training_history.csv
-
-# Performance comparison
-python Scripts/plot_performance_comparison.py
-
-# Quadrant dashboard
-python Scripts/plot_quadrant_dashboard.py --predictions results/test_predictions.csv
-
-# All figures at once
-python Scripts/generate_all_figures.py
-```
 
 ## 📝 Citation
 
