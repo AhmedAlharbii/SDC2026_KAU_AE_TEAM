@@ -112,21 +112,28 @@ dummy_input = np.zeros((1, n_timesteps, n_features))
 _ = model(dummy_input)
 
 # Try loading the full model's weights
+weights_loaded = False
 try:
     model.load_weights(os.path.join(MODEL_DIR, 'final_model.h5'))
     print(f"      ✓ Model weights loaded from final_model.h5")
+    weights_loaded = True
 except:
     # If that fails, try the weights file
     try:
         model.load_weights(os.path.join(MODEL_DIR, 'model_weights.weights.h5'))
         print(f"      ✓ Model weights loaded from model_weights.weights.h5")
+        weights_loaded = True
     except:
         try:
             model.load_weights(os.path.join(MODEL_DIR, 'best_model.h5'))
             print(f"      ✓ Model weights loaded from best_model.h5")
+            weights_loaded = True
         except Exception as e:
             print(f"      ✗ Could not load weights: {e}")
-            print(f"      Proceeding with untrained model (results will be random)")
+            raise RuntimeError("Model weights could not be loaded from any checkpoint") from e
+
+if not weights_loaded:
+    raise RuntimeError("No model checkpoint was loaded; aborting inference")
 
 print(f"      ✓ Model rebuilt and weights loaded")
 
@@ -136,7 +143,6 @@ print(f"      ✓ Scaler loaded")
 
 # Load test data
 X_test = np.load(os.path.join(SEQUENCE_DIR, 'X_test.npy'))
-Y_test = np.load(os.path.join(SEQUENCE_DIR, 'Y_test.npy'))
 test_meta = pd.read_csv(os.path.join(SEQUENCE_DIR, 'test_metadata.csv'))
 print(f"      ✓ Test data: {X_test.shape[0]} samples")
 
@@ -177,7 +183,6 @@ print(f"\n[3/5] Computing threat scores and confidence levels...")
 def compute_threat_and_confidence(
     pred_mean, 
     pred_std, 
-    Y_actual, 
     X_input,
     feature_names,
     scaler
@@ -195,6 +200,7 @@ def compute_threat_and_confidence(
     - Based on model's prediction uncertainty (MC Dropout std)
     - Lower std → higher confidence
     - Also considers how much input data (non-zero timesteps)
+    - Does NOT use ground-truth future labels (deployment-safe)
     """
     
     n_samples = pred_mean.shape[0]
@@ -240,9 +246,6 @@ def compute_threat_and_confidence(
         # 2. Get predicted Pc
         predicted_pc_scaled = pred_mean[i, main_pc_idx]
         
-        # 3. Get actual Pc (for comparison)
-        actual_pc_scaled = Y_actual[i, main_pc_idx]
-        
         # 4. Calculate Pc trend (predicted vs current)
         pc_change = predicted_pc_scaled - current_pc_scaled
         
@@ -285,12 +288,7 @@ def compute_threat_and_confidence(
         n_valid_timesteps = np.sum(non_zero_mask)
         data_confidence = min(1.0, n_valid_timesteps / 10)  # Max at 10 CDMs
         
-        # 3. Prediction accuracy proxy
-        # If prediction is close to actual, we're more confident
-        prediction_error = np.abs(pred_mean[i] - Y_actual[i]).mean()
-        accuracy_confidence = 1 / (1 + prediction_error * 2)
-        
-        # 4. Covariance-based confidence (if available)
+        # 3. Covariance-based confidence (if available)
         if cr_r_idx is not None:
             predicted_cov = pred_mean[i, cr_r_idx]
             # Higher covariance = less confident
@@ -300,10 +298,9 @@ def compute_threat_and_confidence(
         
         # Combine confidence components
         confidence = (
-            uncertainty_confidence * 0.4 +  # Model uncertainty is key
+            uncertainty_confidence * 0.5 +  # Model uncertainty is key
             data_confidence * 0.3 +
-            accuracy_confidence * 0.2 +
-            cov_confidence * 0.1
+            cov_confidence * 0.2
         )
         confidence_levels[i] = np.clip(confidence, 0.1, 1.0)
     
@@ -311,7 +308,7 @@ def compute_threat_and_confidence(
 
 
 threat_scores, confidence_levels = compute_threat_and_confidence(
-    pred_mean, pred_std, Y_test, X_test, feature_names, scaler
+    pred_mean, pred_std, X_test, feature_names, scaler
 )
 
 print(f"      ✓ Threat scores computed")

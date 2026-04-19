@@ -103,10 +103,11 @@ Four-quadrant risk framework:
 SDC2026_KAU_AE_TEAM/
 │
 ├── Scripts/                          # Main implementation
-│   ├── step1_parse_cdms.py           # Custom KVN parser (99.95% recovery)
+│   ├── step1_parse_kvn.py            # Custom KVN parser (99.95% recovery)
 │   ├── step2_prepare_sequences.py    # Self-supervised sequence creation
 │   ├── step3_train_model.py          # BiGRU training with MC Dropout
-│   ├── step4_inference_dashboard.py  # Performance evaluation
+│   ├── step4_inference_dashboard.py  # Production-safe inference dashboard
+│   ├── step3b_evaluate_proxy_confidence.py  # Offline confidence-vs-truth diagnostics
 |   ├── step5_visualize.py
 │   ├── step5b_detailed_reports.py    # Event trajectory reports
 |   ├── train_val_test_graph.py
@@ -126,8 +127,7 @@ SDC2026_KAU_AE_TEAM/
 │        └── Table_1_High_Priority_Events.png
 |
 ├── README.md                    # This file
-├── LICENSE                      # MIT License
-└── requirements.txt             # Python dependencies
+└── LICENSE                      # MIT License
 ```
 
 ---
@@ -151,7 +151,7 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r Scripts/requirements.txt
 ```
 
 ### Requirements.txt Contents
@@ -190,19 +190,23 @@ ipykernel==6.25.0        # Jupyter kernel
 ### Quick Start
 ```bash
 # Step 1: Parse CDM files from KVN format
-python Scripts/step1_parse_cdms.py --input data/raw/cdms/ --output data/processed/
+python Scripts/step1_parse_kvn.py
 
 # Step 2: Create self-supervised sequences
-python Scripts/step2_prepare_sequences.py --input data/processed/ --output data/sequences/
+python Scripts/step2_prepare_sequences.py
 
 # Step 3: Train BiGRU model
-python Scripts/step3_train_model.py --data data/sequences/ --output trained_model/
+python Scripts/step3_train_model.py
 
-# Step 4: Evaluate on test set
-python Scripts/step4_evaluate_model.py --model trained_model/best_model.h5 --data data/sequences/
+# Step 3B: Offline confidence gate (truth used only for validation)
+python Scripts/step3b_evaluate_proxy_confidence.py
 
-# Step 5: Generate event reports
-python Scripts/step5_generate_reports.py --model trained_model/best_model.h5 --output results/
+# Step 4: Production-safe inference (NO truth labels in scoring)
+python Scripts/step4_inference_dashboard.py
+
+# Step 5: Generate figures and reports
+python Scripts/step5_visualize.py
+python Scripts/step5b_detailed_reports.py
 ```
 
 ## 📦 Dataset
@@ -246,7 +250,7 @@ Due to licensing restrictions, the raw CDM dataset is **not included** in this r
 1. Test on (https://www.space-track.org/)
 2. Download the CDM dataset (KVN format)
 3. Place files in `data/raw/cdms/`
-4. Run our custom parser: `python Scripts/step1_parse_cdms.py`
+4. Run our custom parser: `python Scripts/step1_parse_kvn.py`
 
 ---
 
