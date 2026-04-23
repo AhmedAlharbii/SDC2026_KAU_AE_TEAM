@@ -1,0 +1,32 @@
+{
+  "n_timesteps": 20,
+  "n_features": 11,
+  "feature_names": [
+    "COLLISION_PROBABILITY",
+    "log10_pc",
+    "MISS_DISTANCE",
+    "time_to_tca_hours",
+    "combined_cr_r",
+    "combined_ct_t",
+    "combined_cn_n",
+    "RELATIVE_SPEED",
+    "RELATIVE_POSITION_R",
+    "RELATIVE_POSITION_T",
+    "RELATIVE_POSITION_N"
+  ],
+  "gru_units_1": 128,
+  "gru_units_2": 64,
+  "dense_units": 64,
+  "dropout_rate": 0.3,
+  "l2_reg": 0.001,
+  "seed": 42,
+  "batch_size": 64,
+  "learning_rate": 0.001,
+  "mc_samples": 50,
+  "test_loss": 0.9163767695426941,
+  "test_mae": 0.46926742792129517,
+  "test_pc_mae": 0.4146738350391388,
+  "training_time_minutes": 24.764425216666666,
+  "best_val_loss": 73.10403442382812,
+  "epochs_trained": 48
+}
