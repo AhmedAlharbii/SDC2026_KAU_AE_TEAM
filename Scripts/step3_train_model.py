@@ -36,8 +36,9 @@ np.random.seed(SEED)
 
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers, Model, regularizers
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+
+from model_builder import build_self_supervised_gru
 
 tf.random.set_seed(SEED)
 
@@ -106,6 +107,14 @@ try:
     print(f"      ✓ X_test:  {X_test.shape}")
     print(f"      ✓ Y_test:  {Y_test.shape}")
     print(f"      ✓ Features: {feature_names}")
+
+    split_info_path = os.path.join(INPUT_DIR, 'split_info.csv')
+    split_info = {}
+    if os.path.exists(split_info_path):
+        split_info = pd.read_csv(split_info_path).iloc[0].to_dict()
+        print("      ✓ Split metadata loaded")
+    else:
+        print("      ⚠ split_info.csv not found; run metadata will be partial")
     
 except FileNotFoundError as e:
     print(f"      ✗ Error loading data: {e}")
@@ -120,72 +129,6 @@ n_features = X_train.shape[2]
 # ============================================================================
 
 print(f"\n[2/6] Building self-supervised GRU model...")
-
-def build_self_supervised_gru(n_timesteps, n_features, gru_units_1, gru_units_2, 
-                               dense_units, dropout_rate, l2_reg):
-    """
-    Build a GRU model for self-supervised CDM prediction.
-    
-    Input: Sequence of CDM features
-    Output: Predicted next CDM feature values
-    
-    Uses standard Dropout - we'll handle MC inference separately.
-    """
-    
-    inputs = layers.Input(shape=(n_timesteps, n_features), name='cdm_sequence')
-    
-    # Masking for padded sequences (zeros)
-    x = layers.Masking(mask_value=0.0)(inputs)
-    
-    # First Bidirectional GRU layer
-    x = layers.Bidirectional(
-        layers.GRU(
-            gru_units_1, 
-            return_sequences=True,
-            kernel_regularizer=regularizers.l2(l2_reg),
-            recurrent_regularizer=regularizers.l2(l2_reg)
-        ),
-        name='bigru_1'
-    )(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.Dropout(dropout_rate)(x)
-    
-    # Second Bidirectional GRU layer
-    x = layers.Bidirectional(
-        layers.GRU(
-            gru_units_2,
-            return_sequences=False,
-            kernel_regularizer=regularizers.l2(l2_reg),
-            recurrent_regularizer=regularizers.l2(l2_reg)
-        ),
-        name='bigru_2'
-    )(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.Dropout(dropout_rate)(x)
-    
-    # Dense layers
-    x = layers.Dense(
-        dense_units,
-        activation='relu',
-        kernel_regularizer=regularizers.l2(l2_reg),
-        name='dense_1'
-    )(x)
-    x = layers.Dropout(dropout_rate)(x)
-    
-    x = layers.Dense(
-        dense_units // 2,
-        activation='relu',
-        kernel_regularizer=regularizers.l2(l2_reg),
-        name='dense_2'
-    )(x)
-    x = layers.Dropout(dropout_rate)(x)
-    
-    # Output layer: predict all features of the next CDM
-    outputs = layers.Dense(n_features, name='predicted_cdm')(x)
-    
-    model = Model(inputs=inputs, outputs=outputs, name='SelfSupervised_CDM_GRU')
-    
-    return model
 
 
 # Build the model
@@ -347,6 +290,9 @@ print(f"      Uncertainty range: [{np.min(avg_uncertainty):.4f}, {np.max(avg_unc
 
 print(f"\nSaving model and results...")
 
+run_id = datetime.now().strftime('%Y%m%d_%H%M%S')
+generated_at = datetime.now().isoformat(timespec='seconds')
+
 # Save model in H5 format (more compatible)
 model.save(os.path.join(OUTPUT_DIR, 'final_model.h5'))
 print(f"      ✓ Model saved to {OUTPUT_DIR}/final_model.h5")
@@ -379,6 +325,8 @@ print(f"      ✓ Test predictions saved")
 
 # Save model configuration
 config = {
+    'run_id': run_id,
+    'generated_at': generated_at,
     'seed': SEED,
     'n_timesteps': int(n_timesteps),
     'n_features': int(n_features),
@@ -396,12 +344,45 @@ config = {
     'test_pc_mae': float(test_pc_mae),
     'training_time_minutes': training_time,
     'best_val_loss': float(min(history.history['val_loss'])),
-    'epochs_trained': len(history.history['loss'])
+    'epochs_trained': len(history.history['loss']),
+    'split_info': split_info,
 }
 
 with open(os.path.join(OUTPUT_DIR, 'model_config.json'), 'w') as f:
     json.dump(config, f, indent=2)
 print(f"      ✓ Model config saved")
+
+# Save per-run metadata JSON for lightweight experiment tracking
+run_metadata_path = os.path.join(OUTPUT_DIR, f'run_metadata_{run_id}.json')
+with open(run_metadata_path, 'w', encoding='utf-8') as f:
+    json.dump(config, f, indent=2)
+print(f"      ✓ Run metadata saved: {os.path.basename(run_metadata_path)}")
+
+# Append compact run record to CSV history
+run_record = {
+    'run_id': run_id,
+    'generated_at': generated_at,
+    'seed': SEED,
+    'learning_rate': LEARNING_RATE,
+    'batch_size': BATCH_SIZE,
+    'mc_samples': MC_SAMPLES,
+    'test_loss': float(test_loss),
+    'test_mae': float(test_mae),
+    'test_pc_mae': float(test_pc_mae),
+    'best_val_loss': float(min(history.history['val_loss'])),
+    'epochs_trained': len(history.history['loss']),
+}
+if split_info:
+    run_record['split_method'] = split_info.get('split_method', '')
+    run_record['split_seed'] = split_info.get('random_seed', '')
+
+runs_csv_path = os.path.join(OUTPUT_DIR, 'training_runs.csv')
+run_record_df = pd.DataFrame([run_record])
+if os.path.exists(runs_csv_path):
+    run_record_df.to_csv(runs_csv_path, mode='a', header=False, index=False)
+else:
+    run_record_df.to_csv(runs_csv_path, index=False)
+print(f"      ✓ Training run index updated: {os.path.basename(runs_csv_path)}")
 
 # ============================================================================
 # SUMMARY

@@ -106,10 +106,12 @@ SDC2026_KAU_AE_TEAM/
 │   ├── step1_parse_kvn.py            # Custom KVN parser (99.95% recovery)
 │   ├── step2_prepare_sequences.py    # Self-supervised sequence creation
 │   ├── step3_train_model.py          # BiGRU training with MC Dropout
+│   ├── model_builder.py              # Shared model architecture (step3/3b/4)
 │   ├── step4_inference_dashboard.py  # Production-safe inference dashboard
 │   ├── step3b_evaluate_proxy_confidence.py  # Offline confidence-vs-truth diagnostics
 |   ├── step5_visualize.py
 │   ├── step5b_detailed_reports.py    # Event trajectory reports
+|   ├── smoke_tests.py                # Artifact smoke checks
 |   ├── train_val_test_graph.py
 |   ├── visualize_model_architecture.py
 |   ├── calculate_R2.py
@@ -207,7 +209,22 @@ python Scripts/step4_inference_dashboard.py
 # Step 5: Generate figures and reports
 python Scripts/step5_visualize.py
 python Scripts/step5b_detailed_reports.py
+
+# Optional: run artifact smoke checks
+python Scripts/smoke_tests.py --stage full
 ```
+
+### Generated Artifacts
+
+- `Scripts/processed_sequences/`:
+    - `X_*.npy`, `Y_*.npy`, metadata CSVs
+    - `feature_imputer.pkl`, `feature_scaler.pkl`
+- `Scripts/trained_model/`:
+    - `final_model.h5`, `best_model.h5`, `model_weights.weights.h5`
+    - `model_config.json`, `training_history.csv`, `test_predictions.csv`
+    - `run_metadata_<timestamp>.json`, `training_runs.csv`
+- `Scripts/dashboard_output/`:
+    - `event_dashboard.csv`, `sample_predictions.csv`, `dashboard_summary.json`
 
 ## 📦 Dataset
 

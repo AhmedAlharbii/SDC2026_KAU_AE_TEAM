@@ -24,8 +24,8 @@ warnings.filterwarnings('ignore')
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+
+from model_builder import build_model_from_config
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -63,48 +63,8 @@ n_features = config['n_features']
 print(f"      ✓ Config loaded")
 print(f"      ✓ Features: {feature_names}")
 
-# Rebuild the model architecture (must match training)
-from tensorflow.keras import layers, Model, regularizers
-
-def build_model(n_timesteps, n_features):
-    """Rebuild model architecture matching training."""
-    inputs = layers.Input(shape=(n_timesteps, n_features), name='cdm_sequence')
-    x = layers.Masking(mask_value=0.0)(inputs)
-    
-    x = layers.Bidirectional(
-        layers.GRU(128, return_sequences=True,
-                   kernel_regularizer=regularizers.l2(0.001),
-                   recurrent_regularizer=regularizers.l2(0.001)),
-        name='bigru_1'
-    )(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.Dropout(0.3)(x)
-    
-    x = layers.Bidirectional(
-        layers.GRU(64, return_sequences=False,
-                   kernel_regularizer=regularizers.l2(0.001),
-                   recurrent_regularizer=regularizers.l2(0.001)),
-        name='bigru_2'
-    )(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.Dropout(0.3)(x)
-    
-    x = layers.Dense(64, activation='relu',
-                     kernel_regularizer=regularizers.l2(0.001),
-                     name='dense_1')(x)
-    x = layers.Dropout(0.3)(x)
-    
-    x = layers.Dense(32, activation='relu',
-                     kernel_regularizer=regularizers.l2(0.001),
-                     name='dense_2')(x)
-    x = layers.Dropout(0.3)(x)
-    
-    outputs = layers.Dense(n_features, name='predicted_cdm')(x)
-    
-    return Model(inputs=inputs, outputs=outputs, name='SelfSupervised_CDM_GRU')
-
 # Build model
-model = build_model(n_timesteps, n_features)
+model = build_model_from_config(config)
 
 # Load weights from H5 file
 # We need to call the model once to build it before loading weights

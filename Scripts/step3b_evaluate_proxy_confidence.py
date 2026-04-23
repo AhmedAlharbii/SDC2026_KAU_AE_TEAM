@@ -23,7 +23,8 @@ import matplotlib.pyplot as plt
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import tensorflow as tf
-from tensorflow.keras import layers, Model, regularizers
+
+from model_builder import build_model_from_config
 
 print("=" * 80)
 print("STEP 3B: OFFLINE EVALUATION GATE")
@@ -45,45 +46,6 @@ def require_file(path):
     """Fail fast when required artifacts are missing."""
     if not os.path.exists(path):
         raise FileNotFoundError(f"Required artifact not found: {path}")
-
-
-def build_model(n_timesteps, n_features):
-    """Rebuild model architecture to match step3 training."""
-    inputs = layers.Input(shape=(n_timesteps, n_features), name="cdm_sequence")
-    x = layers.Masking(mask_value=0.0)(inputs)
-
-    x = layers.Bidirectional(
-        layers.GRU(
-            128,
-            return_sequences=True,
-            kernel_regularizer=regularizers.l2(0.001),
-            recurrent_regularizer=regularizers.l2(0.001),
-        ),
-        name="bigru_1",
-    )(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.Dropout(0.3)(x)
-
-    x = layers.Bidirectional(
-        layers.GRU(
-            64,
-            return_sequences=False,
-            kernel_regularizer=regularizers.l2(0.001),
-            recurrent_regularizer=regularizers.l2(0.001),
-        ),
-        name="bigru_2",
-    )(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.Dropout(0.3)(x)
-
-    x = layers.Dense(64, activation="relu", kernel_regularizer=regularizers.l2(0.001), name="dense_1")(x)
-    x = layers.Dropout(0.3)(x)
-
-    x = layers.Dense(32, activation="relu", kernel_regularizer=regularizers.l2(0.001), name="dense_2")(x)
-    x = layers.Dropout(0.3)(x)
-
-    outputs = layers.Dense(n_features, name="predicted_cdm")(x)
-    return Model(inputs=inputs, outputs=outputs, name="SelfSupervised_CDM_GRU")
 
 
 def load_model_weights(model):
@@ -213,7 +175,7 @@ print(f"      ✓ Test samples: {len(x_test):,}")
 print(f"      ✓ Features: {n_features}")
 
 print("\n[2/6] Loading model and running MC dropout predictions...")
-model = build_model(n_timesteps, n_features)
+model = build_model_from_config(config)
 _ = model(np.zeros((1, n_timesteps, n_features)))
 load_model_weights(model)
 
@@ -278,7 +240,7 @@ sample_df["proxy_confidence_from_truth"] = 1.0 / (1.0 + 2.0 * sample_df["sample_
 corr_conf_vs_error = float(sample_df["confidence_level"].corr(sample_df["sample_mae"]))
 corr_proxy_vs_error = float(sample_df["proxy_confidence_from_truth"].corr(sample_df["sample_mae"]))
 
-bins = np.linspace(0.0, 1.0, 11)
+bins = np.linspace(0.0, 1.0, 11).tolist()
 sample_df["confidence_bin"] = pd.cut(sample_df["confidence_level"], bins=bins, include_lowest=True)
 calib = sample_df.groupby("confidence_bin", observed=False).agg(
     n_samples=("sample_mae", "count"),
