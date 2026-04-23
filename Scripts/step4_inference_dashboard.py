@@ -152,6 +152,55 @@ parsed_data['TCA'] = pd.to_datetime(parsed_data['TCA'], errors='coerce')
 parsed_data['CREATION_DATE'] = pd.to_datetime(parsed_data['CREATION_DATE'], errors='coerce')
 print(f"      ✓ Original CDM data loaded")
 
+
+def validate_inference_inputs(x_test, test_meta, parsed_data, feature_names, config):
+    """Validate inference artifacts before running MC Dropout."""
+
+    required_meta_cols = ['event_id', 'tca', 'total_cdms', 'target_pc', 'target_time_to_tca']
+    required_parsed_cols = ['event_id', 'TCA', 'CREATION_DATE', 'COLLISION_PROBABILITY', 'MISS_DISTANCE']
+
+    if x_test.ndim != 3:
+        raise ValueError(f"X_test must be 3D (samples, timesteps, features); got shape {x_test.shape}")
+
+    if x_test.shape[1] != config['n_timesteps']:
+        raise ValueError(
+            f"X_test timestep mismatch: expected {config['n_timesteps']}, got {x_test.shape[1]}"
+        )
+
+    if x_test.shape[2] != config['n_features']:
+        raise ValueError(
+            f"X_test feature mismatch: expected {config['n_features']}, got {x_test.shape[2]}"
+        )
+
+    if len(feature_names) != config['n_features']:
+        raise ValueError(
+            f"feature_names length mismatch: expected {config['n_features']}, got {len(feature_names)}"
+        )
+
+    if len(test_meta) != len(x_test):
+        raise ValueError(
+            f"test_metadata row count mismatch: expected {len(x_test)}, got {len(test_meta)}"
+        )
+
+    missing_meta_cols = [col for col in required_meta_cols if col not in test_meta.columns]
+    if missing_meta_cols:
+        raise ValueError(f"test_metadata missing required columns: {missing_meta_cols}")
+
+    missing_parsed_cols = [col for col in required_parsed_cols if col not in parsed_data.columns]
+    if missing_parsed_cols:
+        raise ValueError(f"parsed_cdm_data missing required columns: {missing_parsed_cols}")
+
+    if np.isnan(x_test).any() or np.isinf(x_test).any():
+        raise ValueError("X_test contains NaN or infinite values")
+
+    if parsed_data['event_id'].isna().any():
+        raise ValueError("parsed_cdm_data contains missing event_id values")
+
+    print("      ✓ Inference input validation passed")
+
+
+validate_inference_inputs(X_test, test_meta, parsed_data, feature_names, config)
+
 # ============================================================================
 # MC DROPOUT INFERENCE
 # ============================================================================

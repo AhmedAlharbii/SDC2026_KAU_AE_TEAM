@@ -19,17 +19,27 @@ import numpy as np
 import pandas as pd
 import os
 import json
+import random
 from datetime import datetime
 import warnings
 warnings.filterwarnings('ignore')
 
 # Set environment before importing TensorFlow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['PYTHONHASHSEED'] = '42'
+os.environ['TF_DETERMINISTIC_OPS'] = '1'
+os.environ['TF_CUDNN_DETERMINISTIC'] = '1'
+
+SEED = 42
+random.seed(SEED)
+np.random.seed(SEED)
 
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers, Model, regularizers
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+
+tf.random.set_seed(SEED)
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -37,6 +47,7 @@ print("=" * 80)
 print("STEP 3: TRAIN SELF-SUPERVISED GRU MODEL")
 print("DebriSolver Competition - KAU Team")
 print("=" * 80)
+print(f"Deterministic seed set to: {SEED}")
 
 # Check GPU
 gpus = tf.config.list_physical_devices('GPU')
@@ -368,6 +379,7 @@ print(f"      ✓ Test predictions saved")
 
 # Save model configuration
 config = {
+    'seed': SEED,
     'n_timesteps': int(n_timesteps),
     'n_features': int(n_features),
     'feature_names': feature_names,

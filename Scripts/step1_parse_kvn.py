@@ -210,6 +210,34 @@ for col in df.columns:
             df[col] = pd.to_numeric(df[col], errors='coerce')
             break
 
+
+def validate_parsed_dataframe(dataframe):
+    """Fail fast if the parsed CDM table is missing core schema fields."""
+
+    required_columns = [
+        'event_id',
+        'source_file',
+        'CREATION_DATE',
+        'TCA',
+        'COLLISION_PROBABILITY',
+        'MISS_DISTANCE',
+    ]
+
+    missing_columns = [column for column in required_columns if column not in dataframe.columns]
+    if missing_columns:
+        raise ValueError(f"Parsed CDM data is missing required columns: {missing_columns}")
+
+    if dataframe.empty:
+        raise ValueError("Parsed CDM data is empty after parsing")
+
+    print("    ✓ Core schema validation passed")
+    for column in required_columns:
+        valid_pct = dataframe[column].notna().mean() * 100
+        print(f"      {column}: {valid_pct:.1f}% valid")
+
+
+validate_parsed_dataframe(df)
+
 # Calculate derived features
 print("    Calculating derived features...")
 

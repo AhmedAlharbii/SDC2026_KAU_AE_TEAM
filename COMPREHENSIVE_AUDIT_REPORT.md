@@ -50,6 +50,73 @@ These are the issues the team should fix first, in order of importance:
 
 ---
 
+## FIX PLAN
+
+### Phase 1: Data Integrity First
+
+**Goal:** Stop the pipeline from learning on fake zero values.
+
+**Tasks:**
+1. Replace `fillna(0)` in [step2_prepare_sequences.py](../Scripts/step2_prepare_sequences.py) with training-only imputation.
+2. Add missingness indicator columns for features that are commonly absent.
+3. Refit the scaler on imputed training data only.
+4. Regenerate `processed_sequences/` artifacts from scratch.
+
+**Acceptance criteria:**
+- No `fillna(0)` remains in the feature scaling or sequence creation path.
+- Missing values are explicitly represented, not silently collapsed into zero.
+- The regenerated `X_*.npy` and `Y_*.npy` files load successfully.
+
+### Phase 2: Reproducibility
+
+**Goal:** Make training runs auditable and repeatable.
+
+**Tasks:**
+1. Add deterministic seed setup in [step3_train_model.py](../Scripts/step3_train_model.py).
+2. Log the seed, TensorFlow version, and split metadata in the training output.
+3. Run training twice and compare the final metrics and best epoch.
+
+**Acceptance criteria:**
+- Same code + same data + same seed produces the same training history.
+- The team can explain exactly which seed produced the submitted model.
+
+### Phase 3: Input Validation and Safety Checks
+
+**Goal:** Fail early when the input is malformed.
+
+**Tasks:**
+1. Add schema checks in [step1_parse_kvn.py](../Scripts/step1_parse_kvn.py).
+2. Validate sequence shapes and NaN-free arrays in [step2_prepare_sequences.py](../Scripts/step2_prepare_sequences.py).
+3. Validate config/artifact presence before inference in [step4_inference_dashboard.py](../Scripts/step4_inference_dashboard.py).
+
+**Acceptance criteria:**
+- Invalid inputs raise clear exceptions instead of propagating silently.
+- Inference cannot start if required artifacts are missing or incompatible.
+
+### Phase 4: Guardrails and Maintenance
+
+**Goal:** Prevent regressions and reduce code drift.
+
+**Tasks:**
+1. Remove dead code in [step5b_detailed_reports.py](../Scripts/step5b_detailed_reports.py).
+2. Align README commands with actual script names and file locations.
+3. Add a small test suite for parsing, sequence creation, and inference output shape.
+4. Add a lightweight CI workflow if the repo will be maintained beyond this submission.
+
+**Acceptance criteria:**
+- Dead code is removed.
+- README instructions run without path mismatches.
+- Basic tests catch future leakage or artifact regressions.
+
+### Recommended Execution Order
+
+1. Phase 1, because data integrity affects every downstream artifact.
+2. Phase 2, because the model results must be reproducible before anything else.
+3. Phase 3, because the pipeline needs failure guards before the next submission.
+4. Phase 4, because maintenance work should come after correctness is restored.
+
+---
+
 ## SECTION 1: DATA SAFETY & LEAKAGE ANALYSIS
 
 ### 1.1 P0 FIXED: Data Leakage in Inference Confidence ✅

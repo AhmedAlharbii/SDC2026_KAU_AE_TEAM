@@ -16,6 +16,7 @@ import pandas as pd
 import numpy as np
 import os
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.impute import SimpleImputer
 from datetime import datetime
 import joblib
 import warnings
@@ -188,10 +189,16 @@ print(f"\n[5/7] Fitting feature scaler on training data...")
 # Get training data
 train_df = df[df['event_id'].isin(train_events)]
 
-# Fit scaler on training features only
+# Fit imputer and scaler on training features only
+imputer = SimpleImputer(strategy='median')
 scaler = StandardScaler()
-train_features = train_df[FEATURES].fillna(0)
-scaler.fit(train_features)
+train_features = train_df[FEATURES]
+train_features_imputed = imputer.fit_transform(train_features)
+scaler.fit(train_features_imputed)
+
+# Save imputer and scaler for reproducibility
+joblib.dump(imputer, os.path.join(OUTPUT_DIR, 'feature_imputer.pkl'))
+print(f"      ✓ Imputer fitted and saved")
 
 # Save scaler
 joblib.dump(scaler, os.path.join(OUTPUT_DIR, 'feature_scaler.pkl'))
@@ -238,9 +245,10 @@ def create_sequences_for_events(event_list, df, scaler, features, max_len):
         if len(event_data) < 2:
             continue
         
-        # Extract and scale features
-        event_features = event_data[features].fillna(0).values
-        event_features_scaled = scaler.transform(event_features)
+        # Extract, impute, and scale features using training-derived statistics
+        event_features = event_data[features]
+        event_features_imputed = imputer.transform(event_features)
+        event_features_scaled = scaler.transform(event_features_imputed)
         
         # Get metadata
         event_tca = event_data['TCA'].iloc[-1]
