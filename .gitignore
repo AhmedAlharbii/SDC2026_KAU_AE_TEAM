@@ -1,0 +1,10 @@
+Scripts/__pycache__/
+Scripts/processed_sequences/
+Scripts/trained_model/*.h5
+Scripts/trained_model/test_predictions.csv
+Scripts/trained_model/training_history.csv
+Scripts/dashboard_output/
+Scripts/visualizations/
+*.pyc
+
+Scripts/parsed_cdm_data.csv
