@@ -9,6 +9,8 @@ Date: December 2024
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import json
+import os
 
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['savefig.dpi'] = 300
@@ -23,9 +25,15 @@ val_mae = history_df['val_mae'].values
 train_pc_mae = history_df['pc_mae'].values
 val_pc_mae = history_df['val_pc_mae'].values
 
-best_epoch = 28
-test_mae = 0.464
-test_pc_mae = 0.403
+# Load metrics from saved artifacts — never hardcode these
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+with open('trained_model/model_config.json', 'r', encoding='utf-8') as f:
+    config = json.load(f)
+
+best_epoch = history_df['val_loss'].idxmin() + 1  # 1-indexed
+test_mae = config.get('test_mae', val_mae[best_epoch - 1])
+test_pc_mae = config.get('test_pc_mae', val_pc_mae[best_epoch - 1])
 
 # Create figure
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
@@ -62,7 +70,8 @@ ax1.legend(loc='upper right', fontsize=10, framealpha=0.95,
            edgecolor='black', fancybox=True)
 ax1.grid(True, alpha=0.3, linestyle='--', linewidth=0.8)
 ax1.set_xlim(0, len(epochs) + 2)
-ax1.set_ylim(0.45, 0.65)
+ax1.set_ylim(max(0, min(train_mae.min(), val_mae.min()) - 0.05),
+             max(train_mae.max(), val_mae.max()) + 0.05)
 
 # ============================================================================
 # Subplot 2: Collision Probability MAE
@@ -96,7 +105,8 @@ ax2.legend(loc='upper right', fontsize=10, framealpha=0.95,
            edgecolor='black', fancybox=True)
 ax2.grid(True, alpha=0.3, linestyle='--', linewidth=0.8)
 ax2.set_xlim(0, len(epochs) + 2)
-ax2.set_ylim(0.38, 0.55)
+ax2.set_ylim(max(0, min(train_pc_mae.min(), val_pc_mae.min()) - 0.05),
+             max(train_pc_mae.max(), val_pc_mae.max()) + 0.05)
 
 # ============================================================================
 # Title and interpretation
