@@ -249,12 +249,13 @@ if 'CREATION_DATE' in df.columns and 'TCA' in df.columns:
     ).dt.total_seconds() / 3600
 
 # Combined covariance (sum of both objects' position uncertainty)
+# NaN is preserved — step2's imputer will handle missing values with median
 if 'object1_CR_R' in df.columns and 'object2_CR_R' in df.columns:
-    df['combined_cr_r'] = df['object1_CR_R'].fillna(0) + df['object2_CR_R'].fillna(0)
+    df['combined_cr_r'] = df['object1_CR_R'] + df['object2_CR_R']
 if 'object1_CT_T' in df.columns and 'object2_CT_T' in df.columns:
-    df['combined_ct_t'] = df['object1_CT_T'].fillna(0) + df['object2_CT_T'].fillna(0)
+    df['combined_ct_t'] = df['object1_CT_T'] + df['object2_CT_T']
 if 'object1_CN_N' in df.columns and 'object2_CN_N' in df.columns:
-    df['combined_cn_n'] = df['object1_CN_N'].fillna(0) + df['object2_CN_N'].fillna(0)
+    df['combined_cn_n'] = df['object1_CN_N'] + df['object2_CN_N']
 
 # Log10 of collision probability
 if 'COLLISION_PROBABILITY' in df.columns:
@@ -263,7 +264,8 @@ if 'COLLISION_PROBABILITY' in df.columns:
 # Total covariance trace (measure of overall uncertainty)
 if all(col in df.columns for col in ['combined_cr_r', 'combined_ct_t', 'combined_cn_n']):
     df['covariance_trace'] = df['combined_cr_r'] + df['combined_ct_t'] + df['combined_cn_n']
-    df['log10_cov_trace'] = np.log10(df['covariance_trace'].replace(0, 1))
+    valid_cov = df['covariance_trace'].gt(0)
+    df.loc[valid_cov, 'log10_cov_trace'] = np.log10(df.loc[valid_cov, 'covariance_trace'])
 
 print(f"    ✓ DataFrame: {len(df):,} rows, {len(df.columns)} columns")
 
