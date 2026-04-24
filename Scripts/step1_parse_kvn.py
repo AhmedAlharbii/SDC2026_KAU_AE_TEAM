@@ -9,6 +9,7 @@ DebriSolver Competition - KAU Team
 
 import os
 import re
+import argparse
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -120,9 +121,15 @@ def parse_kvn_file(filepath):
 
 print("\n[1/5] Searching for KVN files...")
 
-kvn_directory = input("\nEnter path to KVN files directory (or press Enter for current): ").strip()
-if not kvn_directory:
-    kvn_directory = '.'
+parser = argparse.ArgumentParser(
+    description='Parse KVN CDM files into structured CSV for model training'
+)
+parser.add_argument(
+    '--kvn-dir', default='.',
+    help='Path to directory containing KVN files (default: current directory)'
+)
+args = parser.parse_args()
+kvn_directory = args.kvn_dir
 
 kvn_files = list(Path(kvn_directory).glob('**/*.kvn'))
 
