@@ -267,7 +267,7 @@ def create_sequences_for_events(event_list, df, scaler, features, max_len):
             
             # Pad input sequence to max_len
             if len(input_seq) < max_len:
-                padding = np.zeros((max_len - len(input_seq), len(features)))
+                padding = np.full((max_len - len(input_seq), len(features)), -999.0)
                 input_seq_padded = np.vstack([padding, input_seq])
             else:
                 input_seq_padded = input_seq[-max_len:]

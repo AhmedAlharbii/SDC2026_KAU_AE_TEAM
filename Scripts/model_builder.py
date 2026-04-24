@@ -15,7 +15,7 @@ def build_self_supervised_gru(
     """Build the shared BiGRU model used across step3/step3b/step4."""
 
     inputs = layers.Input(shape=(n_timesteps, n_features), name="cdm_sequence")
-    x = layers.Masking(mask_value=0.0)(inputs)
+    x = layers.Masking(mask_value=-999.0)(inputs)
 
     x = layers.Bidirectional(
         layers.GRU(

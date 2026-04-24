@@ -199,22 +199,26 @@ def compute_threat_and_confidence(
     """
     Compute threat score and confidence from model predictions.
     
-    Threat Score (0-100):
-    - Based on PREDICTED trajectory of Pc
-    - If model predicts Pc will increase → higher threat
-    - If model predicts Pc will decrease → lower threat
-    - Also considers absolute Pc level
+    Predictions are inverse-transformed to physical units before scoring.
+    Threat thresholds are based on conjunction assessment practice:
+      - Pc > 1e-4  (log10 > -4):  maneuver threshold (ESA/NASA)
+      - Pc > 1e-6  (log10 > -6):  elevated risk
+      - Pc > 1e-8  (log10 > -8):  low but notable
     
     Confidence (0-1):
     - Based on model's prediction uncertainty (MC Dropout std)
-    - Lower std → higher confidence
-    - Also considers how much input data (non-zero timesteps)
+    - Also considers data quantity and covariance quality
     - Does NOT use ground-truth future labels (deployment-safe)
     """
     
     n_samples = pred_mean.shape[0]
     threat_scores = np.zeros(n_samples)
     confidence_levels = np.zeros(n_samples)
+    
+    # Inverse-transform predictions and std to physical units
+    pred_physical = scaler.inverse_transform(pred_mean)
+    # For std: scale back using scaler's scale_ (std of training features)
+    pred_std_physical = pred_std * scaler.scale_
     
     # Find feature indices
     pc_idx = None
@@ -238,44 +242,68 @@ def compute_threat_and_confidence(
     # Use log10_pc if available, otherwise COLLISION_PROBABILITY
     main_pc_idx = log10_pc_idx if log10_pc_idx is not None else pc_idx
     
+    # Also inverse-transform the input sequences for current Pc comparison
+    # Reshape for scaler: (samples * timesteps, features) then back
+    n_ts = X_input.shape[1]
+    X_flat = X_input.reshape(-1, X_input.shape[2])
+    X_physical_flat = scaler.inverse_transform(X_flat)
+    X_physical = X_physical_flat.reshape(X_input.shape)
+    
     for i in range(n_samples):
         # =====================================================================
-        # THREAT SCORE
+        # THREAT SCORE (using physical units)
         # =====================================================================
         
-        # 1. Get current Pc from input sequence (last non-zero timestep)
-        input_seq = X_input[i]
-        non_zero_mask = np.any(input_seq != 0, axis=1)
-        if np.any(non_zero_mask):
-            last_valid_idx = np.where(non_zero_mask)[0][-1]
-            current_pc_scaled = input_seq[last_valid_idx, main_pc_idx]
+        # 1. Get current Pc from input sequence (last non-padding timestep)
+        input_seq = X_input[i]  # scaled, for padding detection
+        input_phys = X_physical[i]  # physical units, for values
+        non_padding_mask = ~np.all(input_seq == -999.0, axis=1)
+        
+        if np.any(non_padding_mask):
+            last_valid_idx = np.where(non_padding_mask)[0][-1]
+            current_pc = input_phys[last_valid_idx, main_pc_idx]
         else:
-            current_pc_scaled = 0
+            current_pc = -10.0 if log10_pc_idx is not None else 0.0
         
-        # 2. Get predicted Pc
-        predicted_pc_scaled = pred_mean[i, main_pc_idx]
+        # 2. Get predicted Pc in physical units
+        predicted_pc = pred_physical[i, main_pc_idx]
         
-        # 4. Calculate Pc trend (predicted vs current)
-        pc_change = predicted_pc_scaled - current_pc_scaled
-        
-        # 5. Base threat from absolute predicted Pc level
+        # 3. Base threat from absolute Pc level (physics-based thresholds)
         if log10_pc_idx is not None:
-            # log10_pc after StandardScaler: roughly -2 to 2
-            # Map to 0-70 range
-            base_threat = (predicted_pc_scaled + 2) * 17.5  # Rough scaling
+            # predicted_pc is log10(Pc) in real units
+            if predicted_pc > -4:        # Pc > 1e-4: maneuver threshold
+                base_threat = 70 + (predicted_pc + 4) * 10  # 70-80+
+            elif predicted_pc > -6:      # Pc > 1e-6: elevated risk
+                base_threat = 40 + (predicted_pc + 6) * 15  # 40-70
+            elif predicted_pc > -8:      # Pc > 1e-8: low but notable
+                base_threat = 15 + (predicted_pc + 8) * 12.5  # 15-40
+            else:                        # Pc < 1e-8: negligible
+                base_threat = max(0, 15 + (predicted_pc + 8) * 2)
             base_threat = np.clip(base_threat, 0, 70)
         else:
-            base_threat = predicted_pc_scaled * 70
+            # Raw COLLISION_PROBABILITY (0 to 1 range)
+            base_threat = np.clip(-np.log10(max(predicted_pc, 1e-15)) * (-7), 0, 70)
         
-        # 6. Trend modifier (-15 to +15)
-        # Positive pc_change = Pc increasing = more threat
-        trend_modifier = np.clip(pc_change * 30, -15, 15)
+        # 4. Trend modifier: is Pc increasing or decreasing?
+        pc_change = predicted_pc - current_pc
+        if log10_pc_idx is not None:
+            # 1 order of magnitude change in log10 space is significant
+            trend_modifier = np.clip(pc_change * 10, -15, 15)
+        else:
+            trend_modifier = np.clip(pc_change * 30, -15, 15)
         
-        # 7. Time urgency (if available)
+        # 5. Time urgency (physical hours to TCA)
         if time_to_tca_idx is not None:
-            predicted_time = pred_mean[i, time_to_tca_idx]
-            # Lower time = more urgent (after scaling, interpret as normalized)
-            urgency = max(0, (1 - (predicted_time + 1) / 2) * 15)
+            predicted_hours = pred_physical[i, time_to_tca_idx]
+            # Less than 24h = very urgent, less than 72h = urgent
+            if predicted_hours < 24:
+                urgency = 15
+            elif predicted_hours < 72:
+                urgency = 10
+            elif predicted_hours < 168:  # 1 week
+                urgency = 5
+            else:
+                urgency = 0
         else:
             urgency = 0
         
@@ -284,24 +312,26 @@ def compute_threat_and_confidence(
         threat_scores[i] = np.clip(threat, 0, 100)
         
         # =====================================================================
-        # CONFIDENCE
+        # CONFIDENCE (using physical units for covariance)
         # =====================================================================
         
-        # 1. Model uncertainty (from MC Dropout std)
-        # Lower std = more confident
-        avg_std = np.mean(pred_std[i])
-        uncertainty_confidence = 1 / (1 + avg_std * 3)  # Normalize to 0-1
+        # 1. Model uncertainty (from MC Dropout std in physical units)
+        # Use average relative uncertainty across features
+        avg_std_physical = np.mean(pred_std_physical[i])
+        avg_pred_physical = np.mean(np.abs(pred_physical[i])) + 1e-10
+        relative_uncertainty = avg_std_physical / avg_pred_physical
+        uncertainty_confidence = 1 / (1 + relative_uncertainty * 2)
         
         # 2. Data quantity confidence
         # More input timesteps = more confident
-        n_valid_timesteps = np.sum(non_zero_mask)
+        n_valid_timesteps = np.sum(non_padding_mask)
         data_confidence = min(1.0, n_valid_timesteps / 10)  # Max at 10 CDMs
         
-        # 3. Covariance-based confidence (if available)
+        # 3. Covariance-based confidence (physical m² units)
         if cr_r_idx is not None:
-            predicted_cov = pred_mean[i, cr_r_idx]
-            # Higher covariance = less confident
-            cov_confidence = 1 / (1 + abs(predicted_cov))
+            predicted_cov_physical = pred_physical[i, cr_r_idx]
+            # Covariance in m²: < 100 m² is good, > 10000 m² is poor
+            cov_confidence = 1 / (1 + max(0, predicted_cov_physical) / 1000)
         else:
             cov_confidence = 0.5
         
