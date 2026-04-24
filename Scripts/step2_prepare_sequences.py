@@ -19,6 +19,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.impute import SimpleImputer
 from datetime import datetime
 import joblib
+import yaml
 import warnings
 warnings.filterwarnings('ignore', category=FutureWarning, module='tensorflow')
 warnings.filterwarnings('ignore', category=DeprecationWarning, module='tensorflow')
@@ -38,9 +39,13 @@ INPUT_FILE = 'parsed_cdm_data.csv'
 OUTPUT_DIR = 'processed_sequences'
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+# Load central config
+with open('config.yaml', 'r') as f:
+    cfg = yaml.safe_load(f)
+
 # Sequence parameters
-MAX_SEQUENCE_LENGTH = 20  # Maximum CDMs per event to consider
-MIN_CDMS_FOR_TRAINING = 2  # Minimum CDMs needed (need at least 2 for prediction)
+MAX_SEQUENCE_LENGTH = cfg['data']['max_sequence_length']
+MIN_CDMS_FOR_TRAINING = cfg['data']['min_cdms']
 
 # Features the model will learn to predict (and use as input)
 # These are the key parameters that describe a conjunction state

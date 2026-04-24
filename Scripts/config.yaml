@@ -1,0 +1,26 @@
+# ==============================================================================
+# SDC2026 KAU AE Team — Central Configuration
+# All hyperparameters live here. Edit this file to change settings.
+# All pipeline scripts read from this file automatically.
+# ==============================================================================
+
+data:
+  max_sequence_length: 20    # Maximum CDMs per event to use as input
+  min_cdms: 2                # Minimum CDMs needed per event for training
+
+model:
+  gru_units_1: 128           # BiGRU layer 1 units (per direction)
+  gru_units_2: 64            # BiGRU layer 2 units (per direction)
+  dense_units: 64            # Dense layer units
+  dropout_rate: 0.3          # Dropout probability (used in MC Dropout too)
+  l2_reg: 0.001              # L2 regularization strength
+
+training:
+  batch_size: 64
+  epochs: 150
+  learning_rate: 0.001
+  patience: 20               # EarlyStopping patience (epochs)
+  seed: 42                   # Random seed for reproducibility
+
+inference:
+  mc_samples: 50             # Number of MC Dropout forward passes

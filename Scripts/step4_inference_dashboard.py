@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 import os
 import json
+import yaml
 import joblib
 from datetime import datetime
 import warnings
@@ -45,7 +46,9 @@ OUTPUT_DIR = 'dashboard_output'
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # MC Dropout samples for uncertainty estimation
-MC_SAMPLES = 50
+with open('config.yaml', 'r') as f:
+    cfg = yaml.safe_load(f)
+MC_SAMPLES = cfg['inference']['mc_samples']
 
 # ============================================================================
 # LOAD CONFIG AND REBUILD MODEL

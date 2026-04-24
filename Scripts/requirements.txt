@@ -6,16 +6,13 @@ scikit-learn==1.3.0
 
 # Visualization
 matplotlib==3.7.2
-seaborn==0.12.2
-
-# Scientific Computing
-scipy==1.11.1
 
 # Utilities
-tqdm==4.65.0
+pyyaml>=6.0              # Central config loading (config.yaml)
 python-dateutil==2.8.2
+joblib>=1.3.0            # Model artifact serialization
 
-# Additional dependencies for your scripts
+# Additional dependencies
 openpyxl==3.1.2          # For Excel file handling (if you save .xlsx)
 Pillow==10.0.0           # For image processing in visualizations
 h5py==3.9.0              # For saving Keras models (.h5 format)

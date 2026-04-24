@@ -19,6 +19,7 @@ import json
 import numpy as np
 import pandas as pd
 import joblib
+import yaml
 import matplotlib.pyplot as plt
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
@@ -40,7 +41,9 @@ SEQUENCE_DIR = "processed_sequences"
 OUTPUT_DIR = "evaluation_output"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-MC_SAMPLES = 50
+with open('config.yaml', 'r') as f:
+    cfg = yaml.safe_load(f)
+MC_SAMPLES = cfg['inference']['mc_samples']
 
 
 def require_file(path):

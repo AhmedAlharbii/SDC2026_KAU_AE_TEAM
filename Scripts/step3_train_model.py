@@ -21,6 +21,7 @@ import os
 import json
 import random
 from datetime import datetime
+import yaml
 import warnings
 warnings.filterwarnings('ignore', category=FutureWarning, module='tensorflow')
 warnings.filterwarnings('ignore', category=DeprecationWarning, module='tensorflow')
@@ -70,19 +71,23 @@ INPUT_DIR = 'processed_sequences'
 OUTPUT_DIR = 'trained_model'
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+# Load central config
+with open('config.yaml', 'r') as f:
+    cfg = yaml.safe_load(f)
+
 # Model hyperparameters
-GRU_UNITS_1 = 128
-GRU_UNITS_2 = 64
-DENSE_UNITS = 64
-DROPOUT_RATE = 0.3
-L2_REG = 0.001
+GRU_UNITS_1 = cfg['model']['gru_units_1']
+GRU_UNITS_2 = cfg['model']['gru_units_2']
+DENSE_UNITS = cfg['model']['dense_units']
+DROPOUT_RATE = cfg['model']['dropout_rate']
+L2_REG = cfg['model']['l2_reg']
 
 # Training hyperparameters
-BATCH_SIZE = 64
-EPOCHS = 150  
-LEARNING_RATE = 0.001
-PATIENCE = 20 
-MC_SAMPLES = 50
+BATCH_SIZE = cfg['training']['batch_size']
+EPOCHS = cfg['training']['epochs']
+LEARNING_RATE = cfg['training']['learning_rate']
+PATIENCE = cfg['training']['patience']
+MC_SAMPLES = cfg['inference']['mc_samples']
 
 # ============================================================================
 # LOAD DATA
