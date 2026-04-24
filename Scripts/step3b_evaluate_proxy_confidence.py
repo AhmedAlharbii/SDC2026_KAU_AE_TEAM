@@ -25,6 +25,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import tensorflow as tf
 
 from model_builder import build_model_from_config
+from scoring import compute_threat_and_confidence
 
 print("=" * 80)
 print("STEP 3B: OFFLINE EVALUATION GATE")
@@ -67,85 +68,6 @@ def load_model_weights(model):
     raise RuntimeError("Could not load model weights from any known checkpoint")
 
 
-def compute_threat_and_confidence(pred_mean, pred_std, x_input, feature_names):
-    """
-    Production-style scoring logic (no truth labels).
-
-    Threat:
-    - Uses current vs predicted Pc trend + urgency.
-
-    Confidence:
-    - Uses prediction uncertainty + data quantity + covariance quality.
-    """
-
-    n_samples = pred_mean.shape[0]
-    threat_scores = np.zeros(n_samples)
-    confidence_levels = np.zeros(n_samples)
-
-    pc_idx = None
-    log10_pc_idx = None
-    time_to_tca_idx = None
-    cr_r_idx = None
-
-    for i, feat in enumerate(feature_names):
-        if feat == "COLLISION_PROBABILITY":
-            pc_idx = i
-        elif feat == "log10_pc":
-            log10_pc_idx = i
-        elif feat == "time_to_tca_hours":
-            time_to_tca_idx = i
-        elif feat == "combined_cr_r":
-            cr_r_idx = i
-
-    main_pc_idx = log10_pc_idx if log10_pc_idx is not None else pc_idx
-
-    for i in range(n_samples):
-        input_seq = x_input[i]
-        non_zero_mask = np.any(input_seq != 0, axis=1)
-
-        if np.any(non_zero_mask):
-            last_valid_idx = np.where(non_zero_mask)[0][-1]
-            current_pc_scaled = input_seq[last_valid_idx, main_pc_idx]
-        else:
-            current_pc_scaled = 0.0
-
-        predicted_pc_scaled = pred_mean[i, main_pc_idx]
-        pc_change = predicted_pc_scaled - current_pc_scaled
-
-        if log10_pc_idx is not None:
-            base_threat = np.clip((predicted_pc_scaled + 2) * 17.5, 0, 70)
-        else:
-            base_threat = predicted_pc_scaled * 70
-
-        trend_modifier = np.clip(pc_change * 30, -15, 15)
-
-        if time_to_tca_idx is not None:
-            predicted_time = pred_mean[i, time_to_tca_idx]
-            urgency = max(0, (1 - (predicted_time + 1) / 2) * 15)
-        else:
-            urgency = 0
-
-        threat_scores[i] = np.clip(base_threat + trend_modifier + urgency, 0, 100)
-
-        avg_std = np.mean(pred_std[i])
-        uncertainty_confidence = 1 / (1 + avg_std * 3)
-
-        n_valid_timesteps = np.sum(non_zero_mask)
-        data_confidence = min(1.0, n_valid_timesteps / 10)
-
-        if cr_r_idx is not None:
-            predicted_cov = pred_mean[i, cr_r_idx]
-            cov_confidence = 1 / (1 + abs(predicted_cov))
-        else:
-            cov_confidence = 0.5
-
-        confidence_levels[i] = np.clip(
-            0.5 * uncertainty_confidence + 0.3 * data_confidence + 0.2 * cov_confidence,
-            0.1,
-            1.0,
-        )
-
-    return threat_scores, confidence_levels
 
 
 print("\n[1/6] Validating artifacts and loading data...")
@@ -190,8 +112,9 @@ pred_mean = np.mean(mc_predictions, axis=0)
 pred_std = np.std(mc_predictions, axis=0)
 
 print("\n[3/6] Running production-style scoring (threat/confidence)...")
+scaler = joblib.load(os.path.join(SEQUENCE_DIR, "feature_scaler.pkl"))
 threat_scores, confidence_levels = compute_threat_and_confidence(
-    pred_mean, pred_std, x_test, feature_names
+    pred_mean, pred_std, x_test, feature_names, scaler
 )
 
 sample_df = test_meta.copy()
