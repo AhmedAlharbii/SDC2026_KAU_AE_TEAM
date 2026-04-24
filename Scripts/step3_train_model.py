@@ -22,7 +22,8 @@ import json
 import random
 from datetime import datetime
 import warnings
-warnings.filterwarnings('ignore')
+warnings.filterwarnings('ignore', category=FutureWarning, module='tensorflow')
+warnings.filterwarnings('ignore', category=DeprecationWarning, module='tensorflow')
 
 # Set environment before importing TensorFlow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'

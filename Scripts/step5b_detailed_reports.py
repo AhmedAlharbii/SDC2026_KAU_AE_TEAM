@@ -14,7 +14,8 @@ import matplotlib.patches as mpatches
 from matplotlib.gridspec import GridSpec
 import os
 import warnings
-warnings.filterwarnings('ignore')
+warnings.filterwarnings('ignore', category=FutureWarning, module='tensorflow')
+warnings.filterwarnings('ignore', category=DeprecationWarning, module='tensorflow')
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
