@@ -26,7 +26,7 @@ def build_self_supervised_gru(
         ),
         name="bigru_1",
     )(x)
-    x = layers.BatchNormalization()(x)
+    x = layers.LayerNormalization()(x)
     x = layers.Dropout(dropout_rate)(x)
 
     x = layers.Bidirectional(
@@ -38,7 +38,7 @@ def build_self_supervised_gru(
         ),
         name="bigru_2",
     )(x)
-    x = layers.BatchNormalization()(x)
+    x = layers.LayerNormalization()(x)
     x = layers.Dropout(dropout_rate)(x)
 
     x = layers.Dense(
