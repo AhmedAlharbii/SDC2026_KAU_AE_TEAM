@@ -81,18 +81,20 @@ try:
     model.load_weights(os.path.join(MODEL_DIR, 'final_model.h5'))
     print(f"      ✓ Model weights loaded from final_model.h5")
     weights_loaded = True
-except:
+except (OSError, ValueError, RuntimeError) as e:
+    print(f"      ⚠ Could not load final_model.h5: {e}")
     # If that fails, try the weights file
     try:
         model.load_weights(os.path.join(MODEL_DIR, 'model_weights.weights.h5'))
         print(f"      ✓ Model weights loaded from model_weights.weights.h5")
         weights_loaded = True
-    except:
+    except (OSError, ValueError, RuntimeError) as e:
+        print(f"      ⚠ Could not load model_weights.weights.h5: {e}")
         try:
             model.load_weights(os.path.join(MODEL_DIR, 'best_model.h5'))
             print(f"      ✓ Model weights loaded from best_model.h5")
             weights_loaded = True
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError) as e:
             print(f"      ✗ Could not load weights: {e}")
             raise RuntimeError("Model weights could not be loaded from any checkpoint") from e
 

@@ -8,3 +8,5 @@ Scripts/visualizations/
 *.pyc
 
 Scripts/parsed_cdm_data.csv
+
+docs/
