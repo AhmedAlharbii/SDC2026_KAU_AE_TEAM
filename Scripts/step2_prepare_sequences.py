@@ -130,18 +130,22 @@ if 'TCA' in df.columns:
         print(f"      Events with valid TCA: {len(valid_tca):,} ({len(valid_tca)/len(unique_events)*100:.1f}%)")
 
 # Random split: 80% train, 10% validation, 10% test
+# Seed comes from config.yaml so the split is reproducible and tied to the same
+# seed used for model training — change it in one place, affects everything.
 from sklearn.model_selection import train_test_split
 
+SPLIT_SEED = cfg['training']['seed']
+
 train_events, temp_events = train_test_split(
-    unique_events, 
-    test_size=0.2, 
-    random_state=42  # Fixed seed for reproducibility
+    unique_events,
+    test_size=0.2,
+    random_state=SPLIT_SEED
 )
 
 val_events, test_events = train_test_split(
     temp_events,
     test_size=0.5,
-    random_state=42
+    random_state=SPLIT_SEED
 )
 
 print(f"\n      Random split (80/10/10):")
