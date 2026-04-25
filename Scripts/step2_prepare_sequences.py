@@ -48,9 +48,11 @@ MAX_SEQUENCE_LENGTH = cfg['data']['max_sequence_length']
 MIN_CDMS_FOR_TRAINING = cfg['data']['min_cdms']
 
 # Features the model will learn to predict (and use as input)
-# These are the key parameters that describe a conjunction state
+# NOTE: COLLISION_PROBABILITY (raw linear scale) is intentionally EXCLUDED.
+# It is redundant with log10_pc and has catastrophic outliers (117+ std devs)
+# when Pc is even moderately high (~0.07). log10_pc captures all the same
+# information on a well-behaved log scale.
 FEATURES = [
-    'COLLISION_PROBABILITY',
     'log10_pc',
     'MISS_DISTANCE',
     'time_to_tca_hours',
@@ -62,6 +64,11 @@ FEATURES = [
     'RELATIVE_POSITION_T',
     'RELATIVE_POSITION_N',
 ]
+
+# Covariance columns to log-transform before scaling.
+# Raw covariance in m² spans 0 to 20 billion — StandardScaler can't handle this.
+# log1p compresses to [0, ~22] range, making the scaler effective.
+LOG_TRANSFORM_COLS = ['combined_cr_r', 'combined_ct_t', 'combined_cn_n']
 
 # ============================================================================
 # LOAD DATA
@@ -82,6 +89,23 @@ df['CREATION_DATE'] = pd.to_datetime(df['CREATION_DATE'], errors='coerce')
 df['TCA'] = pd.to_datetime(df['TCA'], errors='coerce')
 
 print(f"      ✓ Unique events: {df['event_id'].nunique():,}")
+
+# ============================================================================
+# LOG-TRANSFORM COVARIANCE FEATURES
+# ============================================================================
+
+print(f"\n[1b/7] Applying log1p transform to covariance features...")
+print(f"       Reason: raw covariance in m² spans 0 to ~20 billion.")
+print(f"       StandardScaler fails on this range — log1p compresses to [0,~22].")
+
+for col in LOG_TRANSFORM_COLS:
+    if col in df.columns:
+        before_max = df[col].max()
+        df[col] = np.log1p(df[col].clip(0))   # clip(0) enforces physical non-negativity
+        after_max = df[col].max()
+        print(f"      ✓ {col}: max {before_max:.0f} → {after_max:.3f} (log1p)")
+    else:
+        print(f"      ⚠ {col} not in dataframe — skipping")
 
 # ============================================================================
 # DETERMINE AVAILABLE FEATURES

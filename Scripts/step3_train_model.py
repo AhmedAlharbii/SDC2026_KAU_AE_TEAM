@@ -191,7 +191,11 @@ def pc_mae(y_true, y_pred):
     return tf.reduce_mean(tf.abs(y_true[:, pc_idx] - y_pred[:, pc_idx]))
 
 model.compile(
-    optimizer=keras.optimizers.Adam(learning_rate=LEARNING_RATE),
+    optimizer=keras.optimizers.Adam(
+        learning_rate=LEARNING_RATE,
+        clipnorm=1.0    # gradient clipping — prevents extreme covariance outliers
+                        # from producing catastrophic gradient updates
+    ),
     loss=weighted_mse,
     metrics=['mae', pc_mae]
 )
