@@ -31,6 +31,14 @@ def compute_threat_and_confidence(pred_mean, pred_std, X_input, feature_names, s
     # For std: scale back using scaler's scale_ (std of training features)
     pred_std_physical = pred_std * scaler.scale_
 
+    # Undo log1p for covariance features (KD-14: they were log1p-transformed
+    # before scaling in step2). scaler.inverse_transform returns log1p(cov);
+    # expm1 converts back to raw m² so physical thresholds apply correctly.
+    _LOG_FEATS = {'combined_cr_r', 'combined_ct_t', 'combined_cn_n'}
+    for _fi, _fn in enumerate(feature_names):
+        if _fn in _LOG_FEATS:
+            pred_physical[:, _fi] = np.expm1(np.clip(pred_physical[:, _fi], 0, None))
+
     # Find feature indices
     pc_idx = None
     log10_pc_idx = None
@@ -138,9 +146,11 @@ def compute_threat_and_confidence(pred_mean, pred_std, X_input, feature_names, s
         data_confidence = min(1.0, n_valid_timesteps / 10)  # Max at 10 CDMs
 
         # 3. Covariance-based confidence (physical m² units)
+        # combined_cr_r is in raw m² after expm1 undoes the log1p applied in step2.
+        # < 1,000 m² = well-tracked (high confidence)
+        # > 100,000 m² = poorly tracked (low confidence)
         if cr_r_idx is not None:
             predicted_cov_physical = pred_physical[i, cr_r_idx]
-            # Covariance in m²: < 100 m² is good, > 10000 m² is poor
             cov_confidence = 1 / (1 + max(0, predicted_cov_physical) / 1000)
         else:
             cov_confidence = 0.5

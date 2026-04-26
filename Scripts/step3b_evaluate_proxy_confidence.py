@@ -21,6 +21,7 @@ import pandas as pd
 import joblib
 import yaml
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import tensorflow as tf
@@ -238,6 +239,17 @@ print("\n[6/6] Engineer interpretation...")
 print("  - Negative correlation between confidence and error is desired.")
 print("  - If correlation is near zero/positive, confidence needs recalibration.")
 print("  - If gate passes, proceed to Step 4 for production-safe inference.")
+
+# ============================================================================
+# WRITE EVALUATION GATE FLAG
+# ============================================================================
+# This flag tells step4 that step3b completed successfully.
+# step4 checks for this file at startup and refuses to run if missing.
+
+gate_flag_path = os.path.join(MODEL_DIR, 'gate_passed.flag')
+with open(gate_flag_path, 'w') as f:
+    f.write(f"step3b passed at {datetime.now().isoformat()}\n")
+print(f"\n      ✓ Gate flag written: {gate_flag_path}")
 
 print("\n" + "=" * 80)
 print("✓ STEP 3B COMPLETE")

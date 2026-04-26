@@ -45,6 +45,17 @@ SEQUENCE_DIR = 'processed_sequences'
 OUTPUT_DIR = 'dashboard_output'
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+# ── Evaluation gate ──────────────────────────────────────────────────────────
+# step3b must have passed before production inference is allowed.
+# It writes trained_model/gate_passed.flag on success.
+_gate_flag = os.path.join(MODEL_DIR, 'gate_passed.flag')
+if not os.path.exists(_gate_flag):
+    print("\n✗ GATE NOT PASSED — trained_model/gate_passed.flag is missing.")
+    print("  Run step3b_evaluate_proxy_confidence.py first and ensure it succeeds.")
+    print("  This guard prevents untested models from reaching production inference.")
+    exit(1)
+print(f"  ✓ Gate passed (flag found: {_gate_flag})")
+
 # MC Dropout samples for uncertainty estimation
 with open('config.yaml', 'r') as f:
     cfg = yaml.safe_load(f)
