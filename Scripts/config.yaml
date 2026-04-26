@@ -16,10 +16,10 @@ model:
   l2_reg: 0.001              # L2 regularization strength
 
 training:
-  batch_size: 64
-  epochs: 150
+  batch_size: 32
+  epochs: 75
   learning_rate: 0.001
-  patience: 20               # EarlyStopping patience (epochs)
+  patience: 10               # EarlyStopping patience (epochs)
   seed: 42                   # Random seed for reproducibility
 
 inference:
