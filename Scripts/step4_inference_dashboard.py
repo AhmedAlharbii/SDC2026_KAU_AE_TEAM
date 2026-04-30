@@ -53,7 +53,7 @@ if not os.path.exists(_gate_flag):
     print("\n✗ GATE NOT PASSED — trained_model/gate_passed.flag is missing.")
     print("  Run step3b_evaluate_proxy_confidence.py first and ensure it succeeds.")
     print("  This guard prevents untested models from reaching production inference.")
-    exit(1)
+    sys.exit(1)
 print(f"  ✓ Gate passed (flag found: {_gate_flag})")
 
 # MC Dropout samples for uncertainty estimation

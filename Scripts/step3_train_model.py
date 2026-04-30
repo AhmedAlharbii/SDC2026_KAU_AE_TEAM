@@ -71,6 +71,13 @@ INPUT_DIR = 'processed_sequences'
 OUTPUT_DIR = 'trained_model'
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+# Invalidate the evaluation gate — a new model must re-pass step3b before step4 runs.
+# Without this, an old gate_passed.flag would authorize an untested model.
+_gate_flag = os.path.join(OUTPUT_DIR, 'gate_passed.flag')
+if os.path.exists(_gate_flag):
+    os.remove(_gate_flag)
+    print("\n  ⚠  gate_passed.flag cleared — run step3b after training to re-validate.\n")
+
 # Load central config
 with open('config.yaml', 'r') as f:
     cfg = yaml.safe_load(f)

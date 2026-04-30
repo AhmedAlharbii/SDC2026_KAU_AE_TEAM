@@ -212,3 +212,94 @@ class TestBatchBehavior:
             )
             assert len(threat) == batch_size
             assert len(confidence) == batch_size
+
+
+# ---------------------------------------------------------------------------
+# KD-14: expm1 correction — covariance confidence must use physical m² units
+# ---------------------------------------------------------------------------
+
+class TestCovarianceExpm1:
+    """
+    After KD-14 (step2 applies log1p to covariance before scaling),
+    scaler.inverse_transform() returns log1p(covariance), NOT raw m².
+
+    scoring.py must apply expm1() to convert back to m² before computing
+    covariance-based confidence.  Without the fix, confidence is always ~0.99
+    regardless of how poorly tracked the objects are.
+    """
+
+    # Feature set that includes combined_cr_r (triggers the expm1 branch)
+    FEATURE_NAMES_COV = ['log10_pc', 'time_to_tca_hours', 'combined_cr_r']
+    N_FEATURES_COV = len(FEATURE_NAMES_COV)
+
+    def _make_log1p_scaler(self, log1p_cov_value, n_features=3):
+        """
+        Scaler whose inverse_transform returns log1p-scale values.
+        index 2 = combined_cr_r = log1p(raw_cov_m2)
+        """
+        scaler = MagicMock()
+        def fake_inverse(x):
+            out = x.copy()
+            out[:, 2] = log1p_cov_value   # simulate log1p(covariance)
+            return out
+        scaler.inverse_transform = fake_inverse
+        scaler.scale_ = np.ones(n_features)
+        return scaler
+
+    def test_high_covariance_gives_lower_confidence_than_low_covariance(self):
+        """
+        High covariance (500,000 m²) must give meaningfully lower confidence
+        than low covariance (10 m²).  This directly tests that expm1() fires:
+
+          Without expm1: inverse_transform returns log1p(cov) ≈ 13.12 → cov_confidence ≈ 0.987
+          With    expm1: scoring sees 500,000 m²              → cov_confidence ≈ 0.002
+
+        We compare the two scenarios — the gap must be at least 0.10.
+        """
+        import math
+
+        def _run(raw_cov_m2):
+            lv = math.log1p(raw_cov_m2)
+            scaler = self._make_log1p_scaler(lv)
+            pm = np.array([[-7.0, 48.0, lv]])
+            ps = np.array([[0.01, 0.1, 0.01]])
+            X  = np.full((1, 5, self.N_FEATURES_COV), -999.0)
+            X[0, -1, :] = [-7.0, 48.0, lv]
+            _, conf = compute_threat_and_confidence(pm, ps, X, self.FEATURE_NAMES_COV, scaler)
+            return conf[0]
+
+        conf_high_cov = _run(500_000.0)   # very poor tracking
+        conf_low_cov  = _run(10.0)        # well-tracked
+
+        assert conf_low_cov > conf_high_cov, (
+            f"Low covariance should give higher confidence than high covariance. "
+            f"Got low={conf_low_cov:.3f}, high={conf_high_cov:.3f}."
+        )
+        gap = conf_low_cov - conf_high_cov
+        assert gap > 0.10, (
+            f"Expected a confidence gap > 0.10 between 10m² and 500k m² covariance. "
+            f"Got gap={gap:.3f} (low={conf_low_cov:.3f}, high={conf_high_cov:.3f}). "
+            f"Check that expm1() is applied to combined_cr_r in scoring.py."
+        )
+
+    def test_low_covariance_gives_high_confidence(self):
+        """
+        A covariance of 10 m² (well-tracked) should produce confidence > 0.65.
+        """
+        import math
+        log1p_val = math.log1p(10.0)   # ≈ 2.40
+
+        scaler = self._make_log1p_scaler(log1p_val)
+        pred_mean = np.array([[-7.0, 48.0, log1p_val]])
+        pred_std  = np.array([[0.01, 0.1, 0.01]])
+        X = np.full((1, 5, self.N_FEATURES_COV), -999.0)
+        X[0, -1, :] = [-7.0, 48.0, log1p_val]
+
+        _, confidence = compute_threat_and_confidence(
+            pred_mean, pred_std, X, self.FEATURE_NAMES_COV, scaler
+        )
+
+        assert confidence[0] > 0.65, (
+            f"Low covariance (10 m²) should give confidence > 0.65, "
+            f"got {confidence[0]:.3f}."
+        )
