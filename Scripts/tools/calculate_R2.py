@@ -1,6 +1,10 @@
 import numpy as np
 import pandas as pd
+import os
 from sklearn.metrics import r2_score, mean_absolute_error
+
+# Always resolve paths relative to Scripts/ regardless of which subdirectory this lives in
+os.chdir(os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')))
 
 # Load test predictions (saved from step3)
 test_pred = pd.read_csv('trained_model/test_predictions.csv')

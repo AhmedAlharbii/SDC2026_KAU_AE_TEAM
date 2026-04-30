@@ -10,3 +10,19 @@ Scripts/visualizations/
 Scripts/parsed_cdm_data.csv
 
 docs/
+
+# Generated pipeline artifacts (never commit)
+Scripts/detailed_reports/
+Scripts/evaluation_output/
+Scripts/trained_model/gate_passed.flag
+Scripts/trained_model/run_metadata_*.json
+Scripts/trained_model/training_runs.csv
+Scripts/inspect_data_output.txt
+
+# Binary / large generated files
+Scripts/figures/Table_1_High_Priority_Events.xlsx
+
+# Python env
+sdc2026-kau/
+__pycache__/
+*.egg-info/

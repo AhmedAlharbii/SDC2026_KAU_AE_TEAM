@@ -16,7 +16,9 @@ plt.rcParams['figure.dpi'] = 300
 plt.rcParams['savefig.dpi'] = 300
 plt.rcParams['font.size'] = 11
 
-# Load training history
+# Always run relative to Scripts/ regardless of which subdirectory this file lives in
+os.chdir(os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')))
+
 history_df = pd.read_csv('trained_model/training_history.csv')
 
 epochs = np.arange(1, len(history_df) + 1)
@@ -64,7 +66,7 @@ ax1.annotate('Test at Best Epoch',
 
 ax1.set_xlabel('Epoch', fontsize=12, fontweight='bold')
 ax1.set_ylabel('Mean Absolute Error', fontsize=12, fontweight='bold')
-ax1.set_title('Overall MAE Evolution\n(All 11 Features)', 
+ax1.set_title('Overall MAE Evolution\n(All 10 Features)', 
               fontsize=13, fontweight='bold')
 ax1.legend(loc='upper right', fontsize=10, framealpha=0.95, 
            edgecolor='black', fancybox=True)

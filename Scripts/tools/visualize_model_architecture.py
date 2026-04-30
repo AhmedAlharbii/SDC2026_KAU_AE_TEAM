@@ -11,6 +11,10 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 import numpy as np
+import os
+
+# Always resolve paths relative to Scripts/ regardless of which subdirectory this lives in
+os.chdir(os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')))
 
 # Create figure with more vertical space
 fig, ax = plt.subplots(figsize=(12, 16))

@@ -11,7 +11,7 @@ import json
 import os
 import sys
 
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+os.chdir(os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')))
 
 # Write ALL output to file AND terminal
 log_path = 'inspect_data_output.txt'

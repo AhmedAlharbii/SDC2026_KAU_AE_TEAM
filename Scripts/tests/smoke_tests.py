@@ -7,7 +7,7 @@ import os
 import numpy as np
 import pandas as pd
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 os.chdir(BASE_DIR)
 
 
