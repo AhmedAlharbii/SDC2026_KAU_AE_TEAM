@@ -212,7 +212,7 @@ Jeddah, Saudi Arabia
 
 ## Acknowledgments
 
-- **Saudi Space Agency** — for organizing the Space Data Challenge 2026
+- **Saudi Space Agency (SSA)** — for organizing the Space Debris Conference 2026 and the DebriSolver Competition
 - **ALDORIA** — for providing the CDM dataset that made this research possible
 - **King Abdulaziz University** — for institutional support
 
