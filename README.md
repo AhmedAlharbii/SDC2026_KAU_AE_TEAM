@@ -2,8 +2,9 @@
 ### A Self-Supervised Approach to Satellite Collision Risk Assessment
 
 **SDC2026 — KAU Aerospace Engineering Team**  
-Submitted to the *Conjunction Risk Response* challenge under the **Space Data Challenge 2026**  
-Organized by the **Saudi Space Agency**, data provided by **ALDORIA**
+Submitted to the **DebriSolver Competition** at the [Space Debris Conference 2026](https://ssa.gov.sa)  
+Riyadh, Saudi Arabia · January 26–27, 2026  
+Organized by the **Saudi Space Agency (SSA)**, supported by **UNOOSA** and **ITU**, data provided by **ALDORIA**
 
 ---
 
@@ -221,13 +222,14 @@ Jeddah, Saudi Arabia
 
 ```bibtex
 @inproceedings{alharbi2026conjunction,
-  title     = {Learning Conjunction Dynamics: A Self-Supervised Approach
-               to Satellite Collision Risk Assessment},
-  author    = {Alharbi, Ahmad and Mojelad, Abdulelah and Alharbi, Hamzah
-               and Alsadoon, Khalid and Hassan, Mohamedhakim},
-  booktitle = {Space Data Challenge 2026 — Conjunction Risk Response},
-  year      = {2026},
-  organization = {Saudi Space Agency}
+  title        = {Learning Conjunction Dynamics: A Self-Supervised Approach
+                  to Satellite Collision Risk Assessment},
+  author       = {Alharbi, Ahmad and Mojelad, Abdulelah and Alharbi, Hamzah
+                  and Alsadoon, Khalid and Hassan, Mohamedhakim},
+  booktitle    = {Space Debris Conference 2026 — DebriSolver Competition},
+  address      = {Riyadh, Saudi Arabia},
+  year         = {2026},
+  organization = {Saudi Space Agency (SSA)}
 }
 ```
 
