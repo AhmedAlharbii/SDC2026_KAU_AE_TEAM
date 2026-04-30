@@ -4,7 +4,7 @@
 **SDC2026 — KAU Aerospace Engineering Team**  
 Submitted to the **DebriSolver Competition** at the [Space Debris Conference 2026](https://ssa.gov.sa)  
 Riyadh, Saudi Arabia · January 26–27, 2026  
-Organized by the **Saudi Space Agency (SSA)**, supported by **UNOOSA** and **ITU**, data provided by **ALDORIA**
+Organized by the **Saudi Space Agency (SSA)**, data provided by **ALDORIA**
 
 ---
 
