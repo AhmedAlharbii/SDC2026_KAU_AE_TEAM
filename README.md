@@ -142,16 +142,26 @@ Trained for 150 epochs on CPU (~2.7 hours). ReduceLROnPlateau decayed the learni
 | Validation loss before engineering fixes | 84.9 |
 | Validation loss after fixes (150 epochs) | **0.628** (~99.3% reduction) |
 
-**Risk classification on test set** (201 conjunction events):
+**Risk classification on test set** (2,003 conjunction events):
 
-| Quadrant | Count | Share |
-|----------|-------|-------|
-| ACT NOW | 1,259 | 62.9% |
-| WATCH CLOSELY | 44 | 2.2% |
-| **SAFELY IGNORE** | **638** | **31.9%** |
-| NOT PRIORITY | 62 | 3.1% |
+| Quadrant | Count | Share | Operator Action |
+|----------|-------|-------|-----------------|
+| WATCH CLOSELY | 934 | 46.6% | Request more tracking data |
+| NOT PRIORITY | 603 | 30.1% | Routine monitoring |
+| **ACT NOW** | **369** | **18.4%** | Immediate maneuver evaluation |
+| SAFELY IGNORE | 97 | 4.8% | Deprioritize with confidence |
 
-35% of all conjunction events are classified as low-priority with high model confidence — these can be safely deprioritized without manual review, directly reducing operator workload.
+The distribution reflects the physical reality of conjunction screening: most events arrive with only 2–5 CDMs, putting them in a data-poor state where the model correctly reports *"potential threat, but more tracking data needed"*. As CDMs accumulate toward TCA, events migrate from WATCH CLOSELY → ACT NOW or SAFELY IGNORE.
+
+**MC Dropout uncertainty quantification:**
+
+| Metric | Value |
+|--------|-------|
+| Average prediction uncertainty | 0.1442 |
+| Uncertainty range | [0.050, 0.601] |
+| Confidence range | [0.16, 0.66] |
+| Mean confidence | 0.44 |
+
 
 ---
 

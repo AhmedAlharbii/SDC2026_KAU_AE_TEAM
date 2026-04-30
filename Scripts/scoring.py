@@ -130,23 +130,26 @@ def compute_threat_and_confidence(pred_mean, pred_std, X_input, feature_names, s
         threat_scores[i] = np.clip(threat, 0, 100)
 
         # =====================================================================
-        # CONFIDENCE (using physical units for covariance)
+        # CONFIDENCE (using physical units for covariance; scaled for uncertainty)
         # =====================================================================
 
-        # 1. Model uncertainty (from MC Dropout std in physical units)
-        # Use average relative uncertainty across features
-        avg_std_physical = np.mean(pred_std_physical[i])
-        avg_pred_physical = np.mean(np.abs(pred_physical[i])) + 1e-10
-        relative_uncertainty = avg_std_physical / avg_pred_physical
-        uncertainty_confidence = 1 / (1 + relative_uncertainty * 2)
+        # 1. Model uncertainty (from MC Dropout std in SCALED space)
+        # ---------------------------------------------------------------
+        # IMPORTANT: Do NOT compute relative uncertainty in physical space.
+        # After expm1(), covariance features are millions of m², which overwhelms
+        # avg_pred_physical → relative_uncertainty ≈ 0 → confidence ≈ 1.0 always.
+        # pred_std is already in StandardScaler units (zero-mean, unit-variance).
+        # avg std of 0.05 = tight agreement = high confidence.
+        # avg std of 0.60 = wide spread     = low confidence.
+        avg_std_scaled = np.mean(pred_std[i])   # scaled units
+        uncertainty_confidence = 1 / (1 + avg_std_scaled * 5)
 
         # 2. Data quantity confidence
-        # More input timesteps = more confident
+        # More input timesteps = more confident (max at 10 CDMs)
         n_valid_timesteps = np.sum(non_padding_mask)
-        data_confidence = min(1.0, n_valid_timesteps / 10)  # Max at 10 CDMs
+        data_confidence = min(1.0, n_valid_timesteps / 10)
 
-        # 3. Covariance-based confidence (physical m² units)
-        # combined_cr_r is in raw m² after expm1 undoes the log1p applied in step2.
+        # 3. Covariance-based confidence (physical m² units after expm1)
         # < 1,000 m² = well-tracked (high confidence)
         # > 100,000 m² = poorly tracked (low confidence)
         if cr_r_idx is not None:
@@ -156,11 +159,13 @@ def compute_threat_and_confidence(pred_mean, pred_std, X_input, feature_names, s
             cov_confidence = 0.5
 
         # Combine confidence components
+        # Weights rebalanced so that low-data / high-uncertainty events can fall
+        # below 0.5 → enables all 4 quadrants (WATCH CLOSELY, NOT PRIORITY).
         confidence = (
-            uncertainty_confidence * 0.5 +  # Model uncertainty is key
-            data_confidence * 0.3 +
-            cov_confidence * 0.2
+            uncertainty_confidence * 0.40 +  # MC Dropout spread (scaled space)
+            data_confidence        * 0.35 +  # Data quantity (key real-world signal)
+            cov_confidence         * 0.25    # Covariance quality (tracking accuracy)
         )
-        confidence_levels[i] = np.clip(confidence, 0.1, 1.0)
+        confidence_levels[i] = np.clip(confidence, 0.05, 1.0)
 
     return threat_scores, confidence_levels
