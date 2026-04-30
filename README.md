@@ -130,15 +130,17 @@ Covariance features are log1p-transformed before scaling. Raw values span 0–20
 
 ## Results
 
-Trained for 75 epochs on CPU (~24 minutes). Early stopping patience = 10.
+Trained for 150 epochs on CPU (~2.7 hours). ReduceLROnPlateau decayed the learning rate 7 times (0.001 → 7.8×10⁻⁶). Early stopping patience = 20.
 
 | Metric | Value |
 |--------|-------|
-| Best validation loss | 0.613 |
-| Final validation MAE | ~0.50 |
-| Training / val loss alignment | < 10% gap (well-generalized) |
+| Best validation loss | 0.628 (epoch 147 of 150) |
+| Test loss | 0.620 |
+| Test overall MAE | 0.506 |
+| Test Pc MAE (`log₁₀` scale) | 0.352 |
+| Training / val loss gap | < 8% (well-generalized) |
 | Validation loss before engineering fixes | 84.9 |
-| Validation loss after fixes | **0.613** (~99.3% reduction) |
+| Validation loss after fixes (150 epochs) | **0.628** (~99.3% reduction) |
 
 **Risk classification on test set** (201 conjunction events):
 

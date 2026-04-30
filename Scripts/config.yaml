@@ -17,9 +17,9 @@ model:
 
 training:
   batch_size: 32
-  epochs: 75
+  epochs: 150                # Increased from 75 — previous best was epoch 73/75
   learning_rate: 0.001
-  patience: 10               # EarlyStopping patience (epochs)
+  patience: 20               # Increased from 10 — gives model room to converge
   seed: 42                   # Random seed for reproducibility
 
 inference:
