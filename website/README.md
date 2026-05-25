@@ -1,20 +1,27 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# DebriSolver Showcase Website
 
-# Run and deploy your AI Studio app
+This directory contains the source code for the **DebriSolver Showcase Website**, built by the KAU Aerospace Engineering Team to present the research findings and interactive models from the SDC2026 Competition.
 
-This contains everything you need to run your app locally.
+## Features
+- **HUD-Styled Showcase**: Dynamic, interactive visualizer representing low Earth orbit space debris threat-level quadrants.
+- **Embedded Research Paper**: Online viewer containing the full technical paper manuscript, charts, equations, and diagrams.
+- **Pure Code Visualizations**: All diagrams, gauge panels, loss curves, and calibration plots are rendered entirely in code (HTML/CSS/JS/Chart.js).
 
-View your app in AI Studio: https://ai.studio/apps/532314ad-c52f-4026-84f1-5fdb92f81b08
+## Local Development
+To run this project locally:
 
-## Run Locally
+1. Install Node.js dependencies:
+   ```bash
+   npm install
+   ```
 
-**Prerequisites:**  Node.js
+2. Run the local development server:
+   ```bash
+   npm run dev
+   ```
+   The site will be available at [http://localhost:3000/](http://localhost:3000/).
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+3. Build the production application bundle:
+   ```bash
+   npm run build
+   ```
