@@ -1,0 +1,130 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+@theme {
+  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+body {
+  background-color: #000000;
+  color: #f8fafc;
+  font-family: var(--font-sans);
+}
+
+.grid-bg {
+  position: fixed;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hud-corner {
+    position: absolute;
+    width: 20px; height: 20px;
+    border: 1px solid rgba(255,255,255,0.2);
+    opacity: 0.8;
+}
+.hud-corner.tl { top: 0; left: 0; border-right: none; border-bottom: none; }
+.hud-corner.tr { top: 0; right: 0; border-left: none; border-bottom: none; }
+.hud-corner.bl { bottom: 0; left: 0; border-right: none; border-top: none; }
+.hud-corner.br { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+.arch-block {
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    background: rgba(0, 20, 30, 0.6);
+    padding: 1rem;
+    min-width: 300px;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+}
+.arch-block--input { border-color: rgba(255, 255, 255, 0.2); }
+.arch-block--mask { border-style: dashed; }
+.arch-block--output { border-color: rgba(0, 255, 136, 0.3); background: rgba(0, 30, 20, 0.6); }
+
+.arch-connector {
+    width: 2px;
+    height: 30px;
+    background: rgba(0, 212, 255, 0.2);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.orbital-ring {
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+}
+.orbit {
+    position: absolute; border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    animation: spin linear infinite;
+}
+.orbit--1 { width: 140%; height: 140%; animation-duration: 20s; }
+.orbit--2 { width: 180%; height: 180%; animation-duration: 35s; animation-direction: reverse; }
+.orbit--3 { width: 220%; height: 220%; animation-duration: 45s; }
+
+.debris-dot {
+    position: absolute; top: -3px; left: 50%;
+    width: 6px; height: 6px; border-radius: 50%;
+    transform: translateX(-50%);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+.planet-core {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: #000;
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.quadrant-card {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.02);
+    padding: 1.5rem;
+    display: flex; flex-direction: column; gap: 0.5rem;
+}
+.quadrant--danger { border-top: 2px solid #ff5a5a; }
+.quadrant--warning { border-top: 2px solid #ffbd2e; }
+.quadrant--success { border-top: 2px solid #00ff88; }
+.quadrant--neutral { border-top: 2px solid #808080; }
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes slideUpFade {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-up {
+    animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
